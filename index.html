@@ -4,38 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>স্মার্ট জমি পরিমাপক - প্রফেশনাল এডিশন</title>
+    
+    <!-- PWA Meta Data -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Hind Siliguri', sans-serif;
-        }
-        canvas {
-            touch-action: none;
-        }
-
+        body { font-family: 'Hind Siliguri', sans-serif; }
+        canvas { touch-action: none; }
         .fullscreen-canvas {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 9999 !important;
-            background: #0f172a !important;
-            border-radius: 0 !important;
-            padding: 8px !important;
-            margin: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
-            align-items: center !important;
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important; z-index: 9999 !important;
+            background: #0f172a !important; border-radius: 0 !important;
+            padding: 8px !important; margin: 0 !important; display: flex !important;
+            flex-direction: column !important; justify-content: space-between !important; align-items: center !important;
         }
-
         .fullscreen-canvas canvas {
-            width: 100% !important;
-            height: calc(100vh - 70px) !important;
-            object-fit: fill !important;
-            border-radius: 12px !important;
+            width: 100% !important; height: calc(100vh - 70px) !important;
+            object-fit: fill !important; border-radius: 12px !important;
         }
     </style>
 </head>
@@ -45,9 +37,7 @@
         <!-- Header -->
         <div class="flex flex-col sm:flex-row justify-between items-center pb-3 mb-3 border-b border-slate-200 gap-2">
             <div class="flex items-center gap-2">
-                <div class="bg-emerald-500 text-white p-2 rounded-2xl shadow-md">
-                    📐
-                </div>
+                <div class="bg-emerald-500 text-white p-2 rounded-2xl shadow-md">📐</div>
                 <div>
                     <h1 class="text-lg sm:text-2xl font-extrabold text-slate-800">স্মার্ট জমি পরিমাপক</h1>
                     <p class="text-[11px] text-slate-500 font-medium">নিখুঁত ও ডিজিটাল ড্রয়িং টুলস</p>
@@ -55,6 +45,10 @@
             </div>
             
             <div class="flex items-center gap-2">
+                <!-- PWA Install Button -->
+                <button id="pwaInstallBtn" class="hidden flex items-center gap-1 text-xs sm:text-sm bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-xl font-bold shadow-md transition">
+                    📲 অ্যাপ ইনস্টল
+                </button>
                 <button onclick="toggleFullscreen()" id="fullscreenBtn" class="flex items-center gap-1 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl font-bold shadow-md transition">
                     🖥️ ফুল স্ক্রিন
                 </button>
@@ -71,14 +65,11 @@
 
         <!-- Canvas Area Container -->
         <div id="canvasBox" class="relative z-20 bg-slate-900 p-2 rounded-2xl border-2 border-emerald-500/40 shadow-xl mb-4 overflow-hidden flex justify-center items-center transition-all duration-300">
-            <!-- Floating Fullscreen Top Controls -->
             <div id="fsHeaderControls" class="hidden w-full flex justify-between items-center px-2 py-1 mb-1 bg-slate-800/80 rounded-lg">
                 <span class="text-white text-xs font-bold">🖥️ ফুল স্ক্রিন মোড</span>
                 <div class="flex items-center gap-2">
                     <button onclick="finishShape()" class="bg-blue-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg">✅ নকশা শেষ</button>
-                    <button onclick="toggleFullscreen()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3 py-1 rounded-lg shadow-lg">
-                        ❌ এক্সিট
-                    </button>
+                    <button onclick="toggleFullscreen()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3 py-1 rounded-lg shadow-lg">❌ এক্সিট</button>
                 </div>
             </div>
 
@@ -92,22 +83,14 @@
                 <input type="color" id="fillColorPicker" value="#10b981" onchange="changeShapeColor(this.value)" class="w-6 h-6 rounded cursor-pointer border-0">
             </div>
 
-            <button onclick="finishShape()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">
-                ✅ নকশা শেষ করুন
-            </button>
-            <button onclick="undoLastPoint()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">
-                ↩️ মুছুন (Undo)
-            </button>
-            <button onclick="resetCanvas()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">
-                🗑️ রিসেট
-            </button>
+            <button onclick="finishShape()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">✅ নকশা শেষ করুন</button>
+            <button onclick="undoLastPoint()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">↩️ মুছুন (Undo)</button>
+            <button onclick="resetCanvas()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">🗑️ রিসেট</button>
         </div>
 
         <!-- Dynamic Inputs Section -->
         <div id="inputSection" class="hidden mb-5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-            <h3 class="text-xs sm:text-sm font-extrabold text-slate-700 mb-2 border-b pb-1">
-                ✏️ বাহু ও টানা আইলের আসল পরিমাপ লিখুন:
-            </h3>
+            <h3 class="text-xs sm:text-sm font-extrabold text-slate-700 mb-2 border-b pb-1">✏️ বাহু ও টানা আইলের আসল পরিমাপ লিখুন:</h3>
             <div id="sideInputs" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
         </div>
 
@@ -133,6 +116,38 @@
     </div>
 
     <script>
+        // --- Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Reg Failed', err));
+            });
+        }
+
+        // --- PWA Prompt Event Handling ---
+        let deferredPrompt;
+        const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            pwaInstallBtn.classList.remove('hidden');
+        });
+
+        pwaInstallBtn.addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        pwaInstallBtn.classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        // --- Canvas & Application Logic ---
         const canvas = document.getElementById('landCanvas');
         const ctx = canvas.getContext('2d');
         const GRID_SIZE = 25;
@@ -184,16 +199,14 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isFullscreen) {
-                toggleFullscreen();
-            }
+            if (e.key === 'Escape' && isFullscreen) toggleFullscreen();
         });
 
         function getSmartPointOnEdge(p, a, b) {
             let ab = { x: b.x - a.x, y: b.y - a.y };
             let ap = { x: p.x - a.x, y: p.y - a.y };
             let abLenSq = ab.x * ab.x + ab.y * ab.y;
-            let t = (ap.x * ab.x + ap.y * ap.y) / abLenSq;
+            let t = (ap.x * ab.x + ap.y * ab.y) / abLenSq;
             t = Math.max(0, Math.min(1, t)); 
 
             if (t < 0.08) t = 0;
@@ -364,11 +377,10 @@
             const x = Math.round(pos.x / GRID_SIZE) * GRID_SIZE;
             const y = Math.round(pos.y / GRID_SIZE) * GRID_SIZE;
 
-            // 🚀 ফিল্টার: আগের পয়েন্টের কাছাকাছি চাপ পড়লে নতুন পয়েন্ট যোগ হবে না (অতিরিক্ত বাহু রোধ)
             if (points.length > 0) {
                 let lastP = points[points.length - 1];
                 let dist = Math.hypot(x - lastP.x, y - lastP.y);
-                if (dist < 35) return; // ৩৫ পিক্সেলের ভেতরের ক্লিক ইগনোর করবে
+                if (dist < 35) return;
             }
 
             points.push({ x, y });
@@ -452,7 +464,6 @@
             }
         }
 
-        // 🚀 অতিরিক্ত ও সোজা লাইনের অপ্রয়োজনীয় পয়েন্ট মুছে ফেলে বাহু সীমিত করার অ্যালগরিদম
         function cleanCollinearPoints(pts) {
             if (pts.length < 3) return pts;
             let cleaned = [];
@@ -463,10 +474,8 @@
                 let curr = pts[i];
                 let next = pts[(i + 1) % n];
 
-                // ৩টি পয়েন্ট কি একই সরলরেখায় আছে? (Cross Product)
                 let area = Math.abs((curr.x - prev.x) * (next.y - prev.y) - (curr.y - prev.y) * (next.x - prev.x));
                 
-                // যদি সোজা লাইনে থাকে তবে মাঝের পয়েন্ট বাদ
                 if (area > 100) {
                     cleaned.push(curr);
                 }
@@ -480,9 +489,7 @@
                 return;
             }
 
-            // পয়েন্ট ফিল্টার করে অতিরিক্ত সোজা লাইনের পয়েন্ট সরিয়ে ৪টি কোণা/বাহু ফিক্স করা
             points = cleanCollinearPoints(points);
-
             isClosed = true;
             
             baseSides = [];
@@ -614,4 +621,4 @@
         }
     </script>
 </body>
-  </html>
+</html>

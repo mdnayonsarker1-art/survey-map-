@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্মার্ট জমি পরিমাপক - প্রফেশনাল এডিশন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        canvas {
+            touch-action: none;
+        }
+
+        .fullscreen-canvas {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            background: #0f172a !important;
+            border-radius: 0 !important;
+            padding: 8px !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+
+        .fullscreen-canvas canvas {
+            width: 100% !important;
+            height: calc(100vh - 70px) !important;
+            object-fit: fill !important;
+            border-radius: 12px !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-emerald-50 to-slate-200 min-h-screen p-2 sm:p-6 flex flex-col items-center select-none">
+
+    <div class="max-w-5xl w-full bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-3 sm:p-6 border border-white/60">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-center pb-3 mb-3 border-b border-slate-200 gap-2">
+            <div class="flex items-center gap-2">
+                <div class="bg-emerald-500 text-white p-2 rounded-2xl shadow-md">
+                    📐
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-extrabold text-slate-800">স্মার্ট জমি পরিমাপক</h1>
+                    <p class="text-[11px] text-slate-500 font-medium">নিখুঁত ও ডিজিটাল ড্রয়িং টুলস</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="toggleFullscreen()" id="fullscreenBtn" class="flex items-center gap-1 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl font-bold shadow-md transition">
+                    🖥️ ফুল স্ক্রিন
+                </button>
+                <button onclick="downloadCanvas()" class="flex items-center gap-1 text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl font-bold shadow-md transition">
+                    📥 ডাউনলোড
+                </button>
+            </div>
+        </div>
+
+        <!-- Instruction Banner -->
+        <div id="instruction" class="text-center text-xs sm:text-sm text-emerald-900 mb-3 font-bold bg-emerald-100/70 py-2 px-3 rounded-xl border border-emerald-300/50 shadow-sm">
+            জমি আকুন (শুধু কোণাগুলোতে চাপ দিন)। শেষ হলে "নকশা শেষ করুন" বাটনে চাপ দিন।
+        </div>
+
+        <!-- Canvas Area Container -->
+        <div id="canvasBox" class="relative z-20 bg-slate-900 p-2 rounded-2xl border-2 border-emerald-500/40 shadow-xl mb-4 overflow-hidden flex justify-center items-center transition-all duration-300">
+            <!-- Floating Fullscreen Top Controls -->
+            <div id="fsHeaderControls" class="hidden w-full flex justify-between items-center px-2 py-1 mb-1 bg-slate-800/80 rounded-lg">
+                <span class="text-white text-xs font-bold">🖥️ ফুল স্ক্রিন মোড</span>
+                <div class="flex items-center gap-2">
+                    <button onclick="finishShape()" class="bg-blue-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg">✅ নকশা শেষ</button>
+                    <button onclick="toggleFullscreen()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3 py-1 rounded-lg shadow-lg">
+                        ❌ এক্সিট
+                    </button>
+                </div>
+            </div>
+
+            <canvas id="landCanvas" width="950" height="580" class="cursor-crosshair bg-white rounded-xl w-full h-auto object-contain shadow-md"></canvas>
+        </div>
+
+        <!-- Control Bar -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-5 bg-slate-100 p-2.5 rounded-2xl border border-slate-200">
+            <div class="flex items-center gap-1.5 bg-white px-3 py-1 rounded-xl border border-slate-200 shadow-sm">
+                <label for="fillColorPicker" class="text-xs font-bold text-slate-600">🎨 রঙ:</label>
+                <input type="color" id="fillColorPicker" value="#10b981" onchange="changeShapeColor(this.value)" class="w-6 h-6 rounded cursor-pointer border-0">
+            </div>
+
+            <button onclick="finishShape()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">
+                ✅ নকশা শেষ করুন
+            </button>
+            <button onclick="undoLastPoint()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">
+                ↩️ মুছুন (Undo)
+            </button>
+            <button onclick="resetCanvas()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl shadow transition">
+                🗑️ রিসেট
+            </button>
+        </div>
+
+        <!-- Dynamic Inputs Section -->
+        <div id="inputSection" class="hidden mb-5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+            <h3 class="text-xs sm:text-sm font-extrabold text-slate-700 mb-2 border-b pb-1">
+                ✏️ বাহু ও টানা আইলের আসল পরিমাপ লিখুন:
+            </h3>
+            <div id="sideInputs" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+        </div>
+
+        <!-- Output Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+            <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-2xl text-white text-center shadow-md">
+                <span class="text-[11px] font-semibold block opacity-90">বর্গইঞ্চি (Sq. Inch)</span>
+                <span id="sqInch" class="text-sm sm:text-xl font-black">0</span>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-2xl text-white text-center shadow-md">
+                <span class="text-[11px] font-semibold block opacity-90">বর্গফুট (Sq. Feet)</span>
+                <span id="sqFt" class="text-sm sm:text-xl font-black">0</span>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-3 rounded-2xl text-white text-center shadow-md">
+                <span class="text-[11px] font-semibold block opacity-90">শতাংশ / শতক</span>
+                <span id="shotangsho" class="text-sm sm:text-xl font-black">0</span>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-3 rounded-2xl text-white text-center shadow-md">
+                <span class="text-[11px] font-semibold block opacity-90">কাঠা</span>
+                <span id="katha" class="text-sm sm:text-xl font-black">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('landCanvas');
+        const ctx = canvas.getContext('2d');
+        const GRID_SIZE = 25;
+        let points = [];
+        let baseSides = [];
+        let userSides = [];
+        let customDiagonals = [];
+        let isClosed = false;
+        
+        let activePoint = null;
+        let tempStartPoint = null;
+        let isDragging = false;
+        let isFullscreen = false;
+        let primaryColor = '#10b981';
+
+        drawGrid([]);
+
+        function hexToRGBA(hex, alpha) {
+            let r = parseInt(hex.slice(1, 3), 16);
+            let g = parseInt(hex.slice(3, 5), 16);
+            let b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function changeShapeColor(colorHex) {
+            primaryColor = colorHex;
+            drawGrid(points);
+        }
+
+        function toggleFullscreen() {
+            const box = document.getElementById('canvasBox');
+            const fsHeaderControls = document.getElementById('fsHeaderControls');
+            const fsBtn = document.getElementById('fullscreenBtn');
+
+            isFullscreen = !isFullscreen;
+
+            if (isFullscreen) {
+                box.classList.add('fullscreen-canvas');
+                fsHeaderControls.classList.remove('hidden');
+                fsHeaderControls.classList.add('flex');
+                fsBtn.innerText = "❌ এক্সিট";
+            } else {
+                box.classList.remove('fullscreen-canvas');
+                fsHeaderControls.classList.add('hidden');
+                fsHeaderControls.classList.remove('flex');
+                fsBtn.innerText = "🖥️ ফুল স্ক্রিন";
+            }
+            drawGrid(points);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isFullscreen) {
+                toggleFullscreen();
+            }
+        });
+
+        function getSmartPointOnEdge(p, a, b) {
+            let ab = { x: b.x - a.x, y: b.y - a.y };
+            let ap = { x: p.x - a.x, y: p.y - a.y };
+            let abLenSq = ab.x * ab.x + ab.y * ab.y;
+            let t = (ap.x * ab.x + ap.y * ap.y) / abLenSq;
+            t = Math.max(0, Math.min(1, t)); 
+
+            if (t < 0.08) t = 0;
+            else if (t > 0.92) t = 1;
+            else if (t > 0.45 && t < 0.55) t = 0.5;
+
+            return { x: a.x + t * ab.x, y: a.y + t * ab.y, ratio: t };
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function drawGrid(pts = [], isForDownload = false) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (isForDownload) {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.strokeStyle = '#f1f5f9';
+            ctx.lineWidth = 1;
+
+            for (let x = 0; x < canvas.width; x += GRID_SIZE) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += GRID_SIZE) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            if (pts.length > 0) {
+                ctx.strokeStyle = primaryColor;
+                ctx.fillStyle = hexToRGBA(primaryColor, 0.22);
+                ctx.lineWidth = 4;
+
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                for (let i = 1; i < pts.length; i++) {
+                    ctx.lineTo(pts[i].x, pts[i].y);
+                }
+                if (isClosed) ctx.closePath();
+                ctx.stroke();
+                if (isClosed) ctx.fill();
+
+                customDiagonals.forEach((diag) => {
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([6, 6]);
+                    ctx.beginPath();
+                    ctx.moveTo(diag.p1.x, diag.p1.y);
+                    ctx.lineTo(diag.p2.x, diag.p2.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    ctx.fillStyle = '#f97316';
+                    ctx.beginPath(); ctx.arc(diag.p1.x, diag.p1.y, 6, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(diag.p2.x, diag.p2.y, 6, 0, Math.PI * 2); ctx.fill();
+
+                    ctx.fillStyle = '#b91c1c';
+                    ctx.font = 'bold 13px sans-serif';
+                    ctx.fillText(`আইল: ${diag.val}"`, (diag.p1.x + diag.p2.x) / 2, (diag.p1.y + diag.p2.y) / 2 - 8);
+                });
+
+                if (tempStartPoint) {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath(); ctx.arc(tempStartPoint.x, tempStartPoint.y, 9, 0, Math.PI * 2); ctx.fill();
+                }
+
+                if (activePoint) {
+                    ctx.fillStyle = '#2563eb';
+                    ctx.beginPath(); ctx.arc(activePoint.x, activePoint.y, 9, 0, Math.PI * 2); ctx.fill();
+
+                    if (tempStartPoint) {
+                        ctx.strokeStyle = '#2563eb';
+                        ctx.lineWidth = 2.5;
+                        ctx.setLineDash([4, 4]);
+                        ctx.beginPath();
+                        ctx.moveTo(tempStartPoint.x, tempStartPoint.y);
+                        ctx.lineTo(activePoint.x, activePoint.y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        let tempDist = Math.round(Math.hypot(activePoint.x - tempStartPoint.x, activePoint.y - tempStartPoint.y) / GRID_SIZE);
+                        ctx.fillStyle = '#1d4ed8';
+                        ctx.font = 'bold 12px sans-serif';
+                        ctx.fillText(`~ ${tempDist}"`, (tempStartPoint.x + activePoint.x)/2 + 10, (tempStartPoint.y + activePoint.y)/2 - 10);
+                    }
+                }
+
+                pts.forEach((p, idx) => {
+                    ctx.fillStyle = primaryColor;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill();
+
+                    let nextIdx = (idx + 1) % pts.length;
+                    if (idx < pts.length - 1 || isClosed) {
+                        const nextP = pts[nextIdx];
+                        const val = userSides[idx] !== undefined ? userSides[idx] : 0;
+                        
+                        ctx.fillStyle = '#0f172a';
+                        ctx.font = 'bold 13px sans-serif';
+                        ctx.fillText(`বাহু ${idx + 1}: ${val}"`, (p.x + nextP.x) / 2, (p.y + nextP.y) / 2 - 6);
+                    }
+                });
+            }
+
+            if (isForDownload) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText('স্মার্ট জমি পরিমাপক দ্বারা তৈরি', 15, canvas.height - 15);
+            }
+        }
+
+        function downloadCanvas() {
+            if (points.length < 3) {
+                alert("ডাউনলোড করার আগে জমি আঁকুন।");
+                return;
+            }
+            drawGrid(points, true);
+
+            const imageURI = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            link.download = "jomi-naksha.png";
+            link.href = imageURI;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            drawGrid(points);
+        }
+
+        function handleStart(e) {
+            const pos = getMousePos(e);
+
+            if (isClosed) {
+                let clickedPoint = null;
+                let minDist = 40;
+
+                for (let i = 0; i < points.length; i++) {
+                    let a = points[i];
+                    let b = points[(i + 1) % points.length];
+                    let proj = getSmartPointOnEdge(pos, a, b);
+                    let dist = Math.hypot(pos.x - proj.x, pos.y - proj.y);
+
+                    if (dist < minDist) {
+                        clickedPoint = { x: proj.x, y: proj.y, sideIndex: i };
+                        minDist = dist;
+                    }
+                }
+
+                if (clickedPoint) {
+                    isDragging = true;
+                    activePoint = clickedPoint;
+                    drawGrid(points);
+                }
+                return;
+            }
+
+            const x = Math.round(pos.x / GRID_SIZE) * GRID_SIZE;
+            const y = Math.round(pos.y / GRID_SIZE) * GRID_SIZE;
+
+            // 🚀 ফিল্টার: আগের পয়েন্টের কাছাকাছি চাপ পড়লে নতুন পয়েন্ট যোগ হবে না (অতিরিক্ত বাহু রোধ)
+            if (points.length > 0) {
+                let lastP = points[points.length - 1];
+                let dist = Math.hypot(x - lastP.x, y - lastP.y);
+                if (dist < 35) return; // ৩৫ পিক্সেলের ভেতরের ক্লিক ইগনোর করবে
+            }
+
+            points.push({ x, y });
+            drawGrid(points);
+        }
+
+        function handleMove(e) {
+            if (!isDragging || !isClosed || !activePoint) return;
+            e.preventDefault();
+
+            requestAnimationFrame(() => {
+                const pos = getMousePos(e);
+                let minDist = 50;
+                let bestProj = null;
+
+                for (let i = 0; i < points.length; i++) {
+                    let a = points[i];
+                    let b = points[(i + 1) % points.length];
+                    let proj = getSmartPointOnEdge(pos, a, b);
+                    let dist = Math.hypot(pos.x - proj.x, pos.y - proj.y);
+
+                    if (dist < minDist) {
+                        bestProj = { x: proj.x, y: proj.y, sideIndex: i };
+                        minDist = dist;
+                    }
+                }
+
+                if (bestProj) {
+                    activePoint = bestProj;
+                    document.getElementById('instruction').innerText = `📍 বাহু ${bestProj.sideIndex + 1}-এর ওপর পয়েন্ট নির্ধারণ করছেন...`;
+                    drawGrid(points);
+                }
+            });
+        }
+
+        function handleEnd() {
+            if (!isDragging || !activePoint) return;
+            isDragging = false;
+
+            if (!tempStartPoint) {
+                tempStartPoint = activePoint;
+                activePoint = null;
+                document.getElementById('instruction').innerText = `১ম পয়েন্ট বসানো হয়েছে! এবার ২য় বাহুতে টেনে বা চাপ দিয়ে ২য় পয়েন্ট বসান।`;
+            } else {
+                let p1 = tempStartPoint;
+                let p2 = activePoint;
+
+                let dist = Math.round(Math.hypot(p2.x - p1.x, p2.y - p1.y) / GRID_SIZE);
+
+                customDiagonals.push({
+                    p1: p1,
+                    p2: p2,
+                    side1: p1.sideIndex + 1,
+                    side2: p2.sideIndex + 1,
+                    baseVal: dist,
+                    val: dist
+                });
+
+                tempStartPoint = null;
+                activePoint = null;
+                document.getElementById('instruction').innerText = `✨ নতুন আইল যুক্ত হয়েছে! নিচে মান ইনপুট দিন।`;
+                renderInputs();
+                calculateArea();
+            }
+            drawGrid(points);
+        }
+
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('mouseup', handleEnd);
+
+        canvas.addEventListener('touchstart', handleStart, { passive: false });
+        canvas.addEventListener('touchmove', handleMove, { passive: false });
+        canvas.addEventListener('touchend', handleEnd);
+
+        function undoLastPoint() {
+            if (isClosed) return;
+            if (points.length > 0) {
+                points.pop();
+                drawGrid(points);
+            }
+        }
+
+        // 🚀 অতিরিক্ত ও সোজা লাইনের অপ্রয়োজনীয় পয়েন্ট মুছে ফেলে বাহু সীমিত করার অ্যালগরিদম
+        function cleanCollinearPoints(pts) {
+            if (pts.length < 3) return pts;
+            let cleaned = [];
+            let n = pts.length;
+
+            for (let i = 0; i < n; i++) {
+                let prev = pts[(i - 1 + n) % n];
+                let curr = pts[i];
+                let next = pts[(i + 1) % n];
+
+                // ৩টি পয়েন্ট কি একই সরলরেখায় আছে? (Cross Product)
+                let area = Math.abs((curr.x - prev.x) * (next.y - prev.y) - (curr.y - prev.y) * (next.x - prev.x));
+                
+                // যদি সোজা লাইনে থাকে তবে মাঝের পয়েন্ট বাদ
+                if (area > 100) {
+                    cleaned.push(curr);
+                }
+            }
+            return cleaned.length >= 3 ? cleaned : pts;
+        }
+
+        function finishShape() {
+            if (points.length < 3) {
+                alert("কমপক্ষে ৩টি পয়েন্ট দিয়ে জমি আঁকুন।");
+                return;
+            }
+
+            // পয়েন্ট ফিল্টার করে অতিরিক্ত সোজা লাইনের পয়েন্ট সরিয়ে ৪টি কোণা/বাহু ফিক্স করা
+            points = cleanCollinearPoints(points);
+
+            isClosed = true;
+            
+            baseSides = [];
+            userSides = [];
+            customDiagonals = [];
+            
+            for (let i = 0; i < points.length; i++) {
+                let nextP = points[(i + 1) % points.length];
+                let dist = Math.hypot(nextP.x - points[i].x, nextP.y - points[i].y) / GRID_SIZE;
+                let roundedDist = Math.round(dist);
+                baseSides.push(roundedDist);
+                userSides.push(roundedDist);
+            }
+
+            document.getElementById('instruction').innerText = `💡 নকশা সম্পন্ন হয়েছে! প্রয়োজন অনুযায়ী বাহুতে চাপ দিয়ে আইল (Diagonal) বসাতে পারেন।`;
+
+            renderInputs();
+            calculateArea();
+            drawGrid(points);
+        }
+
+        function renderInputs() {
+            const inputContainer = document.getElementById('sideInputs');
+            inputContainer.innerHTML = '';
+
+            userSides.forEach((val, i) => {
+                inputContainer.innerHTML += `
+                    <div class="input-card bg-white p-2 border rounded-xl shadow-sm space-y-1">
+                        <label class="block text-xs font-bold text-emerald-600">বাহু ${i + 1} (ইঞ্চি):</label>
+                        <input type="number" id="side_${i}" value="${val}" oninput="updateSideValue(${i})" 
+                               class="w-full px-2 py-1 border rounded-lg focus:ring-2 focus:ring-emerald-500 font-bold text-slate-800 text-sm">
+                    </div>
+                `;
+            });
+
+            customDiagonals.forEach((diag, dIdx) => {
+                inputContainer.innerHTML += `
+                    <div class="input-card bg-rose-50 p-2 border border-rose-200 rounded-xl shadow-sm space-y-1 relative">
+                        <button onclick="removeDiagonal(${dIdx})" class="absolute top-1 right-1 text-xs text-rose-500 font-bold hover:text-rose-700">❌</button>
+                        <label class="block text-xs font-bold text-rose-600">🔴 বাহু ${diag.side1} থেকে বাহু ${diag.side2} (ইঞ্চি):</label>
+                        <input type="number" id="diag_${dIdx}" value="${diag.val}" oninput="updateDiagValue(${dIdx})" 
+                               class="w-full px-2 py-1 border rounded-lg focus:ring-2 focus:ring-rose-500 font-bold text-slate-800 text-sm">
+                    </div>
+                `;
+            });
+
+            document.getElementById('inputSection').classList.remove('hidden');
+        }
+
+        function removeDiagonal(index) {
+            customDiagonals.splice(index, 1);
+            renderInputs();
+            drawGrid(points);
+            calculateArea();
+        }
+
+        function updateSideValue(index) {
+            const inputVal = parseFloat(document.getElementById(`side_${index}`).value);
+            userSides[index] = (!isNaN(inputVal) && inputVal > 0) ? inputVal : 0;
+            drawGrid(points);
+            calculateArea();
+        }
+
+        function updateDiagValue(index) {
+            const inputVal = parseFloat(document.getElementById(`diag_${index}`).value);
+            customDiagonals[index].val = (!isNaN(inputVal) && inputVal > 0) ? inputVal : 0;
+            drawGrid(points);
+            calculateArea();
+        }
+
+        function calculateArea() {
+            let rawAreaPixels = 0;
+            const n = points.length;
+            for (let i = 0; i < n; i++) {
+                let j = (i + 1) % n;
+                rawAreaPixels += points[i].x * points[j].y;
+                rawAreaPixels -= points[j].x * points[i].y;
+            }
+            rawAreaPixels = Math.abs(rawAreaPixels) / 2;
+
+            let baseSqInch = rawAreaPixels / (GRID_SIZE * GRID_SIZE);
+
+            let scaleRatioSum = 0;
+            let validCount = 0;
+
+            for (let i = 0; i < baseSides.length; i++) {
+                if (baseSides[i] > 0 && userSides[i] > 0) {
+                    scaleRatioSum += (userSides[i] / baseSides[i]);
+                    validCount++;
+                }
+            }
+
+            customDiagonals.forEach(d => {
+                if (d.baseVal > 0 && d.val > 0) {
+                    scaleRatioSum += (d.val / d.baseVal);
+                    validCount++;
+                }
+            });
+
+            let avgScaleRatio = validCount > 0 ? (scaleRatioSum / validCount) : 1;
+
+            let totalSqInch = baseSqInch * (avgScaleRatio * avgScaleRatio);
+
+            let totalSqFt = totalSqInch / 144;
+            let shotangsho = totalSqFt / 435.6;
+            let katha = totalSqFt / 720;
+
+            document.getElementById('sqInch').innerText = totalSqInch.toFixed(2);
+            document.getElementById('sqFt').innerText = totalSqFt.toFixed(2);
+            document.getElementById('shotangsho').innerText = shotangsho.toFixed(4);
+            document.getElementById('katha').innerText = katha.toFixed(4);
+        }
+
+        function resetCanvas() {
+            points = [];
+            baseSides = [];
+            userSides = [];
+            customDiagonals = [];
+            tempStartPoint = null;
+            activePoint = null;
+            isClosed = false;
+            document.getElementById('instruction').innerText = `জমি আকুন (শুধু কোণাগুলোতে চাপ দিন)। শেষ হলে "নকশা শেষ করুন" বাটনে চাপ দিন।`;
+            document.getElementById('inputSection').classList.add('hidden');
+            drawGrid([]);
+            document.getElementById('sqInch').innerText = '0';
+            document.getElementById('sqFt').innerText = '0';
+            document.getElementById('shotangsho').innerText = '0';
+            document.getElementById('katha').innerText = '0';
+        }
+    </script>
+</body>
+  </html>
